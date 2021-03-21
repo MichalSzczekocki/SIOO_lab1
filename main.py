@@ -2,6 +2,55 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QRadioButton, QComboBox, QSlider, \
     QPushButton
 from PyQt5.QtCore import Qt
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+class Polynomial:
+
+    def __init__(self, *coefficients):
+        """ input: coefficients are in the form a_n, ...a_1, a_0
+        """
+        self.coefficients = list(coefficients)  # tuple is turned into a list
+
+    def __repr__(self):
+        """
+        method to return the canonical string representation
+        of a polynomial.
+        """
+        return "Polynomial" + str(tuple(self.coefficients))
+
+    def __str__(self):
+
+        def x_expr(degree):
+            if degree == 0:
+                res = ""
+            elif degree == 1:
+                res = "x"
+            else:
+                res = "x^" + str(degree)
+            return res
+
+        degree = len(self.coefficients) - 1
+        res = ""
+
+        for i in range(0, degree + 1):
+            coeff = self.coefficients[i]
+            # nothing has to be done if coeff is 0:
+            if abs(coeff) == 1 and i < degree:
+                # 1 in front of x shouldn't occur, e.g. x instead of 1x
+                # but we need the plus or minus sign:
+                res += f"{'+' if coeff > 0 else '-'}{x_expr(degree - i)}"
+            elif coeff != 0:
+                res += f"{coeff:+g}{x_expr(degree - i)}"
+
+        return res.lstrip('+')  # removing leading '+'
+
+    def __call__(self, x):
+        res = 0
+        for coeff in self.coefficients:
+            res = res * x + coeff
+        return res
 
 
 class Radiodemo(QWidget):
@@ -9,10 +58,15 @@ class Radiodemo(QWidget):
     def __init__(self, parent=None):
         super(Radiodemo, self).__init__(parent)
 
-        self.funkcje = ["3x^2 + 5x -8", "-2x^3 + 7x - 2"]
+        self.funkcje = [Polynomial(1, 0, -4, 3, 0),
+                        Polynomial(2, 0),
+                        Polynomial(4, 1, -1),
+                        Polynomial(3, 0, -5, 2, 7),
+                        Polynomial(-42)]
 
         self.cb = QComboBox()
-        self.cb.addItems(self.funkcje)
+        for i in self.funkcje:
+            self.cb.addItem(str(i))
 
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(-100, 100)
@@ -28,7 +82,7 @@ class Radiodemo(QWidget):
         self.koniec = 0
         self.wybor = "Metoda bisekcji"
         self.iteracje = 0
-        self.dokladnosc =0.0
+        self.dokladnosc = 0.0
 
         self.layout = QVBoxLayout()
 
@@ -82,7 +136,7 @@ class Radiodemo(QWidget):
 
         elif self.etap == 2:
             self.etap += 1
-            self.funkcja = self.cb.currentText()
+            self.funkcja = self.funkcje[self.cb.currentIndex()]
             self.label.setText("Wybierz początek przedziału")
             self.layout.removeWidget(self.cb)
             self.layout.removeWidget(self.next)
@@ -125,10 +179,32 @@ class Radiodemo(QWidget):
         self.sliderValue.setText(str(value))
 
     def updateLabelFloat(self, value):
-        self.sliderValue.setText(str(value/100.0))
+        self.sliderValue.setText(str(value / 100.0))
+
+    def samesign(self, a, b):
+        return a * b > 0
 
     def bisekcja(self):
-        print("bi")
+        print(str(self.funkcja))
+        low = self.poczatek
+        high = self.koniec
+
+        for i in range(self.iteracje):
+            midpoint = (low + high) / 2.0
+            if self.samesign(self.funkcja(low), self.funkcja(midpoint)):
+                low = midpoint
+            else:
+                high = midpoint
+
+        X = list(range(self.poczatek, self.koniec))
+        Y = []
+        for i in X:
+            Y.append(self.funkcja(i))
+
+        plt.plot(X, Y)
+        plt.show()
+        print(midpoint)
+        return midpoint
 
     def zlotyPodzial(self):
         print("gold")
@@ -143,3 +219,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
