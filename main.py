@@ -53,16 +53,17 @@ class Polynomial:
         return res
 
 
-class Radiodemo(QWidget):
+class Main(QWidget):
 
     def __init__(self, parent=None):
-        super(Radiodemo, self).__init__(parent)
+        super(Main, self).__init__(parent)
 
         self.funkcje = [Polynomial(1, 0, -4, 3, 0),
                         Polynomial(2, 0),
                         Polynomial(4, 1, -1),
                         Polynomial(3, 0, -5, 2, 7),
-                        Polynomial(-42)]
+                        Polynomial(-42),
+                        Polynomial(1, -1, -1)]
 
         self.cb = QComboBox()
         for i in self.funkcje:
@@ -92,26 +93,26 @@ class Radiodemo(QWidget):
 
         self.b1 = QRadioButton("Metoda bisekcji")
         self.b1.setChecked(True)
-        self.b1.toggled.connect(lambda: self.btnstate(self.b1))
+        self.b1.toggled.connect(lambda: self.radioButtonZmiana(self.b1))
         self.layout.addWidget(self.b1)
 
         self.b2 = QRadioButton("Metoda złotego podziału")
-        self.b2.toggled.connect(lambda: self.btnstate(self.b2))
+        self.b2.toggled.connect(lambda: self.radioButtonZmiana(self.b2))
 
         self.layout.addWidget(self.b2)
         self.setLayout(self.layout)
         self.setWindowTitle("Wybór metody")
 
         self.next = QPushButton('OK')
-        self.next.clicked.connect(self.myfunc)
+        self.next.clicked.connect(self.zmianaEtapu)
         self.layout.addWidget(self.next)
 
-    def btnstate(self, b):
+    def radioButtonZmiana(self, b):
 
         if (b.isChecked()):
             self.wybor = b.text()
 
-    def myfunc(self):
+    def zmianaEtapu(self):
 
         if self.etap == 0:
             self.etap += 1
@@ -191,10 +192,16 @@ class Radiodemo(QWidget):
 
         for i in range(self.iteracje):
             midpoint = (low + high) / 2.0
-            if self.samesign(self.funkcja(low), self.funkcja(midpoint)):
-                low = midpoint
-            else:
+            if self.funkcja(low) * self.funkcja(midpoint) < 0:
                 high = midpoint
+            elif self.funkcja(high) * self.funkcja(midpoint) < 0:
+                low = midpoint
+            elif self.funkcja(midpoint) == 0:
+                print('Jes')
+                break
+            else:
+                print(":(")
+                break
 
         X = list(range(self.poczatek, self.koniec))
         Y = []
@@ -202,6 +209,8 @@ class Radiodemo(QWidget):
             Y.append(self.funkcja(i))
 
         plt.plot(X, Y)
+        plt.plot(midpoint, self.funkcja(midpoint), 'ro')
+        plt.xlim([self.poczatek, self.koniec])
         plt.show()
         print(midpoint)
         return midpoint
@@ -212,12 +221,10 @@ class Radiodemo(QWidget):
 
 def main():
     app = QApplication(sys.argv)
-    ex = Radiodemo()
+    ex = Main()
     ex.show()
     sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
     main()
-
-
