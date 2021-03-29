@@ -9,15 +9,11 @@ import matplotlib.pyplot as plt
 class Polynomial:
 
     def __init__(self, *coefficients):
-        """ input: coefficients are in the form a_n, ...a_1, a_0
-        """
+
         self.coefficients = list(coefficients)  # tuple is turned into a list
 
     def __repr__(self):
-        """
-        method to return the canonical string representation
-        of a polynomial.
-        """
+
         return "Polynomial" + str(tuple(self.coefficients))
 
     def __str__(self):
@@ -172,7 +168,7 @@ class Main(QWidget):
                 self.dokladnosc = self.slider.value() / 100.0
 
             if self.metoda == "Metoda bisekcji":
-                self.bisekcja()
+                self.bisekcja
             else:
                 self.zlotyPodzial()
 
@@ -185,23 +181,67 @@ class Main(QWidget):
     def samesign(self, a, b):
         return a * b > 0
 
+    def unimodalnosc(self):
+
+        krok = self.poczatek
+
+        while krok + 2 <= self.koniec:
+            y1 = self.funkcja(krok)
+            y2 = self.funkcja(krok + 1)
+            y3 = self.funkcja(krok + 2)
+            if (y1 >= y2) and (y2 <= y3):
+                return 0
+            else:
+                krok = krok + 1
+
+        return -1
+
     def bisekcja(self):
         print(str(self.funkcja))
         low = self.poczatek
         high = self.koniec
+        yL = self.funkcja(low)
+        yH = self.funkcja(high)
 
-        for i in range(self.iteracje):
-            midpoint = (low + high) / 2.0
-            if self.funkcja(low) * self.funkcja(midpoint) < 0:
-                high = midpoint
-            elif self.funkcja(high) * self.funkcja(midpoint) < 0:
-                low = midpoint
-            elif self.funkcja(midpoint) == 0:
-                print('Jes')
-                break
-            else:
-                print(":(")
-                break
+        if self.stop == "Ilość iteracji":
+            for i in range(self.iteracje):
+
+                midpoint = (low + high) / 2.0
+                yM = self.funkcja(midpoint)
+
+                if yL * yM < 0:
+                    high = midpoint
+                    yH = yM
+                elif yH * yM < 0:
+                    low = midpoint
+                    yL = yM
+
+                elif yM == 0:
+                    print('Jes')
+                    break
+                else:
+                    print(":(")
+                    break
+
+        else:
+            while abs(float(low) - float(high)) < self.dokladnosc:
+                midpoint = (low + high) / 2.0
+                yM = self.funkcja(midpoint)
+
+                if yL * yM < 0:
+                    high = midpoint
+                    yH = yM
+
+                elif yH * yM < 0:
+                    low = midpoint
+                    yL = yM
+
+                elif yM == 0:
+                    print('Jes')
+                    break
+                else:
+                    print(":(")
+                    break
 
         X = list(range(self.poczatek, self.koniec))
         Y = []
@@ -209,7 +249,7 @@ class Main(QWidget):
             Y.append(self.funkcja(i))
 
         plt.plot(X, Y)
-        plt.plot(midpoint, self.funkcja(midpoint), 'ro')
+        plt.plot(self.funkcja(midpoint), midpoint, 'ro')
         plt.xlim([self.poczatek, self.koniec])
         plt.show()
         print(midpoint)
