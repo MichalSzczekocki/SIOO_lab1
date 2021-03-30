@@ -59,6 +59,7 @@ class Main(QWidget):
                         Polynomial(4, 1, -1),
                         Polynomial(3, 0, -5, 2, 7),
                         Polynomial(-42),
+                        Polynomial(1, 0, -1, -2),
                         Polynomial(1, -1, -1)]
 
         self.cb = QComboBox()
@@ -105,7 +106,7 @@ class Main(QWidget):
 
     def radioButtonZmiana(self, b):
 
-        if (b.isChecked()):
+        if b.isChecked():
             self.wybor = b.text()
 
     def zmianaEtapu(self):
@@ -160,17 +161,31 @@ class Main(QWidget):
                 self.sliderValue.setText('0.5')
                 self.slider.valueChanged.connect(self.updateLabelFloat)
 
-
         elif self.etap == 5:
+
+            temp = 0
+
+            while not self.unimodalnosc():
+                print("nope")
+                self.poczatek -= 5
+                self.poczatek -= 5
+                temp += 1
+
+                if temp == 50:
+                    print("NO{E")
+                    exit(-1)
+
             if self.stop == "Ilość iteracji":
                 self.iteracje = self.slider.value()
             else:
                 self.dokladnosc = self.slider.value() / 100.0
 
             if self.metoda == "Metoda bisekcji":
-                self.bisekcja
+                self.bisekcja()
+                self.next.setDisabled(True)
             else:
                 self.zlotyPodzial()
+                self.next.setDisabled(True)
 
     def updateLabel(self, value):
         self.sliderValue.setText(str(value))
@@ -190,73 +205,109 @@ class Main(QWidget):
             y2 = self.funkcja(krok + 1)
             y3 = self.funkcja(krok + 2)
             if (y1 >= y2) and (y2 <= y3):
-                return 0
+                return True
             else:
-                krok = krok + 1
+                krok += 1
 
-        return -1
+        return False
 
     def bisekcja(self):
         print(str(self.funkcja))
         low = self.poczatek
         high = self.koniec
         yL = self.funkcja(low)
-        yH = self.funkcja(high)
-
+        przedzialy = []
         if self.stop == "Ilość iteracji":
             for i in range(self.iteracje):
 
+                print("Przedział ( " + str(low) + " ; " + str(high) + " )")
+                przedzialy.append(low)
+                przedzialy.append(high)
                 midpoint = (low + high) / 2.0
                 yM = self.funkcja(midpoint)
 
                 if yL * yM < 0:
                     high = midpoint
-                    yH = yM
-                elif yH * yM < 0:
+                else:
                     low = midpoint
                     yL = yM
-
-                elif yM == 0:
-                    print('Jes')
-                    break
-                else:
-                    print(":(")
-                    break
 
         else:
             while abs(float(low) - float(high)) < self.dokladnosc:
+                print("Przedział ( " + str(low) + " ; " + str(high) + " )")
+
                 midpoint = (low + high) / 2.0
                 yM = self.funkcja(midpoint)
 
                 if yL * yM < 0:
                     high = midpoint
-                    yH = yM
-
-                elif yH * yM < 0:
+                else:
                     low = midpoint
                     yL = yM
-
-                elif yM == 0:
-                    print('Jes')
-                    break
-                else:
-                    print(":(")
-                    break
 
         X = list(range(self.poczatek, self.koniec))
         Y = []
         for i in X:
             Y.append(self.funkcja(i))
 
+        plt.figure(200)
         plt.plot(X, Y)
-        plt.plot(self.funkcja(midpoint), midpoint, 'ro')
+        plt.plot(midpoint, self.funkcja(midpoint), 'ro')
         plt.xlim([self.poczatek, self.koniec])
+        plt.show()
+
+        plt.figure(300)
+        temp = 0
+        for i in range(0, len(przedzialy), 2):
+            x = [przedzialy[i], przedzialy[i + 1]]
+            y = [temp, temp]
+            plt.plot(x, y, label="Przedział " + str(temp))
+            temp += 1
         plt.show()
         print(midpoint)
         return midpoint
 
     def zlotyPodzial(self):
-        print("gold")
+        epsilon = self.dokladnosc
+        phi = (1 + 5 ** 0.5) / 2  # golden ratio constant
+        # krok 1
+        k = 0
+        a = {"iteration": k, "value": self.poczatek}
+        b = {"iteration": k, "value": self.koniec}
+        l = {"iteration": k, "value": (a["value"] + (1 - phi) * (b["value"] - a["value"]))}  # lambda
+        mi = {"iteration": k, "value": (a["value"] + phi * (b["value"] - a["value"]))}
+        fu_mi = self.funkcja(mi["value"])  # wartosc funkcji od mi
+        fu_la = self.funkcja(l["value"])  # wartosc funkcji od lambda
+
+        while (b["value"] - a["value"]) >= 2 * epsilon:  # warunek z kroku 2
+            # todo
+            if self.funkcja(l["value"]) > self.funkcja(mi["value"]):
+                # krok 3
+                a["iteration"] = k + 1
+                a["value"] = l["value"]  # z linijki a(k+1)=lambda(k)
+                b["iteration"] = k + 1  # z linijki b(k+1)=b(k)
+                l["iteration"] = k + 1
+                l["value"] = mi["value"]  # z linijki lambda(k+1)=mi(k)
+                fu_la = self.funkcja(mi["value"])
+                mi["iteration"] = k + 1
+                mi["value"] = a["value"] + phi * (b["value"] - a["value"])
+                fu_mi = self.funkcja(mi["value"])
+            elif self.funkcja(l["value"]) <= self.funkcja(mi["value"]):
+                # krok 4
+                a["iteration"] = k + 1
+                b["iteration"] = k + 1
+                b["value"] = mi["value"]
+                mi["iteration"] = k + 1
+                mi["value"] = l["value"]
+                fu_mi = fu_la
+                l["iteration"] = k + 1
+                l["value"] = a["value"] + (1 - phi) * (b["value"] - a["value"])
+                fu_la = self.funkcja(l["value"])
+            k += 1  # krok 5
+        x_opt = (a["value"] + b["value"]) / 2
+        # print(x_opt)
+        # print(a["iteration"])
+        # print(b["iteration"])
 
 
 def main():
