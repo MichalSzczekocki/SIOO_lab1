@@ -217,12 +217,12 @@ class Main(QWidget):
         return midpoint
 
     def zlotyPodzial(self):
-        epsilon = 0.2 #na razie na sztywno
+        epsilon = self.dokladnosc
         phi = (1 + 5 ** 0.5) / 2 #golden ratio constant
         #krok 1
         k = 0
-        a = {"iteration": k, "value": 0}
-        b = {"iteration": k, "value": 2}
+        a = {"iteration": k, "value": self.poczatek}
+        b = {"iteration": k, "value": self.koniec}
         l = {"iteration": k, "value": (a["value"] + (1 - phi) * (b["value"] - a["value"]))} #lambda
         mi = {"iteration": k, "value": (a["value"] + phi * (b["value"] - a["value"]))}
         fu_mi = self.funkcja(mi["value"]) #wartosc funkcji od mi
@@ -252,13 +252,11 @@ class Main(QWidget):
                 l["iteration"] = k + 1
                 l["value"] = a["value"] + (1 - phi) * (b["value"] - a["value"])
                 fu_la = self.funkcja(l["value"])
-            else:
-                continue
             k += 1 #krok 5
         x_opt = (a["value"]+b["value"])/2
-        print(x_opt)
-        print(a["iteration"])  
-        print(b["iteration"])     
+        #print(x_opt)
+        #print(a["iteration"])  
+        #print(b["iteration"])     
 
 def main():
     app = QApplication(sys.argv)
