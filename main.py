@@ -254,7 +254,11 @@ class Main(QWidget):
                 fu_la = self.funkcja(l["value"])
             else:
                 continue
-        k += 1 #krok 5      
+            k += 1 #krok 5
+        x_opt = (a["value"]+b["value"])/2
+        print(x_opt)
+        print(a["iteration"])  
+        print(b["iteration"])     
 
 def main():
     app = QApplication(sys.argv)
