@@ -63,7 +63,8 @@ class Main(QWidget):
                         Polynomial(4, 1, -1),
                         Polynomial(3, 0, -5, 2, 7),
                         Polynomial(-42),
-                        Polynomial(1, -1, -1)]
+                        Polynomial(1, -1, -1),
+                        Polynomial(1, 0 , 0, -4, 10)] #ostatni wielomian pochodzi z ksiazki
 
         self.cb = QComboBox()
         for i in self.funkcje:
@@ -216,8 +217,44 @@ class Main(QWidget):
         return midpoint
 
     def zlotyPodzial(self):
-        print("gold")
+        epsilon = 0.2 #na razie na sztywno
+        phi = (1 + 5 ** 0.5) / 2 #golden ratio constant
+        #krok 1
+        k = 0
+        a = {"iteration": k, "value": 0}
+        b = {"iteration": k, "value": 2}
+        l = {"iteration": k, "value": (a["value"] + (1 - phi) * (b["value"] - a["value"]))} #lambda
+        mi = {"iteration": k, "value": (a["value"] + phi * (b["value"] - a["value"]))}
+        fu_mi = self.funkcja(mi["value"]) #wartosc funkcji od mi
+        fu_la = self.funkcja(l["value"]) #wartosc funkcji od lambda
 
+        while (b["value"] - a["value"]) >= 2*epsilon: #warunek z kroku 2
+            #todo
+            if self.funkcja(l["value"]) > self.funkcja(mi["value"]):
+                #krok 3
+                a["iteration"] = k + 1
+                a["value"] = l["value"] #z linijki a(k+1)=lambda(k)
+                b["iteration"] = k + 1 #z linijki b(k+1)=b(k)
+                l["iteration"] = k + 1
+                l["value"] = mi["value"] #z linijki lambda(k+1)=mi(k)
+                fu_la = self.funkcja(mi["value"])
+                mi["iteration"] = k + 1
+                mi["value"] = a["value"] + phi * (b["value"] - a["value"])
+                fu_mi = self.funkcja(mi["value"])
+            elif self.funkcja(l["value"]) <= self.funkcja(mi["value"]):
+                #krok 4
+                a["iteration"] = k + 1
+                b["iteration"] = k + 1
+                b["value"] = mi["value"]
+                mi["iteration"] = k + 1
+                mi["value"] = l["value"]
+                fu_mi = fu_la
+                l["iteration"] = k + 1
+                l["value"] = a["value"] + (1 - phi) * (b["value"] - a["value"])
+                fu_la = self.funkcja(l["value"])
+            else:
+                continue
+        k += 1 #krok 5      
 
 def main():
     app = QApplication(sys.argv)
