@@ -9,15 +9,11 @@ import matplotlib.pyplot as plt
 class Polynomial:
 
     def __init__(self, *coefficients):
-        """ input: coefficients are in the form a_n, ...a_1, a_0
-        """
+
         self.coefficients = list(coefficients)  # tuple is turned into a list
 
     def __repr__(self):
-        """
-        method to return the canonical string representation
-        of a polynomial.
-        """
+
         return "Polynomial" + str(tuple(self.coefficients))
 
     def __str__(self):
@@ -63,6 +59,7 @@ class Main(QWidget):
                         Polynomial(4, 1, -1),
                         Polynomial(3, 0, -5, 2, 7),
                         Polynomial(-42),
+                        Polynomial(1, 0, -1, -2),
                         Polynomial(1, -1, -1)]
 
         self.cb = QComboBox()
@@ -109,7 +106,7 @@ class Main(QWidget):
 
     def radioButtonZmiana(self, b):
 
-        if (b.isChecked()):
+        if b.isChecked():
             self.wybor = b.text()
 
     def zmianaEtapu(self):
@@ -164,8 +161,20 @@ class Main(QWidget):
                 self.sliderValue.setText('0.5')
                 self.slider.valueChanged.connect(self.updateLabelFloat)
 
-
         elif self.etap == 5:
+
+            temp = 0
+
+            while not self.unimodalnosc():
+                print("nope")
+                self.poczatek -= 5
+                self.poczatek -= 5
+                temp += 1
+
+                if temp == 50:
+                    print("NO{E")
+                    exit(-1)
+
             if self.stop == "Ilość iteracji":
                 self.iteracje = self.slider.value()
             else:
@@ -173,8 +182,10 @@ class Main(QWidget):
 
             if self.metoda == "Metoda bisekcji":
                 self.bisekcja()
+                self.next.setDisabled(True)
             else:
                 self.zlotyPodzial()
+                self.next.setDisabled(True)
 
     def updateLabel(self, value):
         self.sliderValue.setText(str(value))
@@ -185,38 +196,80 @@ class Main(QWidget):
     def samesign(self, a, b):
         return a * b > 0
 
+    def unimodalnosc(self):
+
+        krok = self.poczatek
+
+        while krok + 2 <= self.koniec:
+            y1 = self.funkcja(krok)
+            y2 = self.funkcja(krok + 1)
+            y3 = self.funkcja(krok + 2)
+            if (y1 >= y2) and (y2 <= y3):
+                return True
+            else:
+                krok += 1
+
+        return False
+
     def bisekcja(self):
         print(str(self.funkcja))
         low = self.poczatek
         high = self.koniec
+        yL = self.funkcja(low)
+        przedzialy = []
+        if self.stop == "Ilość iteracji":
+            for i in range(self.iteracje):
 
-        for i in range(self.iteracje):
-            midpoint = (low + high) / 2.0
-            if self.funkcja(low) * self.funkcja(midpoint) < 0:
-                high = midpoint
-            elif self.funkcja(high) * self.funkcja(midpoint) < 0:
-                low = midpoint
-            elif self.funkcja(midpoint) == 0:
-                print('Jes')
-                break
-            else:
-                print(":(")
-                break
+                print("Przedział ( " + str(low) + " ; " + str(high) + " )")
+                przedzialy.append(low)
+                przedzialy.append(high)
+                midpoint = (low + high) / 2.0
+                yM = self.funkcja(midpoint)
+
+                if yL * yM < 0:
+                    high = midpoint
+                else:
+                    low = midpoint
+                    yL = yM
+
+        else:
+            while abs(float(low) - float(high)) < self.dokladnosc:
+                print("Przedział ( " + str(low) + " ; " + str(high) + " )")
+
+                midpoint = (low + high) / 2.0
+                yM = self.funkcja(midpoint)
+
+                if yL * yM < 0:
+                    high = midpoint
+                else:
+                    low = midpoint
+                    yL = yM
 
         X = list(range(self.poczatek, self.koniec))
         Y = []
         for i in X:
             Y.append(self.funkcja(i))
 
+        plt.figure(200)
         plt.plot(X, Y)
         plt.plot(midpoint, self.funkcja(midpoint), 'ro')
         plt.xlim([self.poczatek, self.koniec])
+        plt.show()
+
+        plt.figure(300)
+        temp = 0
+        for i in range(0, len(przedzialy), 2):
+            x = [przedzialy[i], przedzialy[i + 1]]
+            y = [temp, temp]
+            plt.plot(x, y, label="Przedział " + str(temp))
+            temp += 1
         plt.show()
         print(midpoint)
         return midpoint
 
     def zlotyPodzial(self):
         epsilon = self.dokladnosc
+
         phi = (1 + 5 ** 0.5) / 2 #golden ratio constant
         a = self.poczatek
         b = self.koniec
@@ -281,6 +334,8 @@ class Main(QWidget):
     #             fu_la = self.funkcja(l["value"])
     #         k += 1  # krok 5
     #     x_opt = (a["value"] + b["value"]) / 2
+
+       
         # print(x_opt)
         # print(a["iteration"])
         # print(b["iteration"])
